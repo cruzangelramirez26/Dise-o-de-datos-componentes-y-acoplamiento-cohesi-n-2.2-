@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sesión 11 — Diseño de Datos, Componentes y Acoplamiento/Cohesión · EGEL Plus</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0a0c10;--card:#12151e;--card2:#181c28;--border:#1e2436;--text:#c8cdd8;--text2:#7c8494;--white:#e8ecf4;--green:#22c55e;--green2:#15803d;--greenBg:rgba(34,197,94,.08);--red:#ef4444;--red2:#b91c1c;--redBg:rgba(239,68,68,.08);--blue:#3b82f6;--amber:#f59e0b;--amberBg:rgba(245,158,11,.08);--purple:#a78bfa;--cyan:#06b6d4;--orange:#f97316;--teal:#14b8a6}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;line-height:1.7;min-height:100vh}
+::selection{background:var(--teal);color:#fff}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:#2a3040;border-radius:3px}
+.shell{max-width:860px;margin:0 auto;padding:16px 14px 60px}
+.hdr{background:linear-gradient(135deg,#111422,#141e2e 50%,#121a2a);border:1px solid var(--border);border-radius:16px;padding:28px 24px;margin-bottom:20px;position:relative;overflow:hidden}
+.hdr::after{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;background:radial-gradient(circle,rgba(20,184,166,.07),transparent 70%);pointer-events:none}
+.hdr .tag{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2.5px;color:var(--text2);margin-bottom:6px;text-transform:uppercase}
+.hdr h1{font-size:21px;font-weight:700;color:var(--white);margin-bottom:4px}
+.hdr p{font-size:13px;color:var(--text2)}
+.tabs{display:flex;gap:5px;margin-bottom:16px;flex-wrap:wrap}
+.tab{padding:9px 16px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:12.5px;font-weight:500;cursor:pointer;transition:all .2s}
+.tab.active{background:var(--teal);color:#fff;border-color:var(--teal);font-weight:600}
+.tab:hover:not(.active){border-color:#3b4a6a;color:var(--white)}
+.section{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:12px;animation:fadeUp .3s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.section h2{font-size:17px;font-weight:700;color:var(--white);margin-bottom:12px}
+.section h3{font-size:14px;font-weight:600;color:var(--teal);margin:14px 0 6px}
+.section p,.section li{font-size:13.5px;line-height:1.75;color:var(--text)}
+.section ul,.section ol{padding-left:18px;margin:6px 0}.section li{margin-bottom:4px}
+.section strong{color:var(--white);font-weight:600}
+.ref{font-family:'DM Mono',monospace;font-size:10.5px;color:var(--text2);margin-top:10px;font-style:italic}
+.tip{background:var(--amberBg);border:1px solid rgba(245,158,11,.12);border-radius:8px;padding:10px 14px;margin:10px 0;font-size:12.5px}
+.tip strong{color:var(--amber)}
+.ex{background:rgba(20,184,166,.06);border:1px solid rgba(20,184,166,.12);border-radius:8px;padding:10px 14px;margin:10px 0;font-size:12.5px}
+.ex strong{color:var(--teal)}
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.vs>div{background:var(--card2);border-radius:8px;padding:10px 12px;font-size:12.5px;border:1px solid var(--border)}
+.vs h4{font-size:12px;font-weight:600;margin-bottom:4px}
+@media(max-width:600px){.vs{grid-template-columns:1fr}}
+.pbar{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:14px}
+.pbar .track{flex:1;height:6px;background:#1a1f2e;border-radius:3px;overflow:hidden}
+.pbar .fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--blue));border-radius:3px;transition:width .4s ease}
+.pbar .label{font-family:'DM Mono',monospace;font-size:12px;color:var(--text2);white-space:nowrap}
+.qcard{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:14px;animation:fadeUp .35s ease both}
+.qnum{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1.5px;color:var(--teal);margin-bottom:8px}
+.qtxt{font-size:15px;color:var(--white);font-weight:500;line-height:1.7;margin-bottom:6px;white-space:pre-line}
+.opts{display:grid;gap:8px}
+.opt{background:var(--card2);border:1.5px solid var(--border);border-radius:10px;padding:13px 16px;font-size:14px;color:var(--text);cursor:pointer;transition:all .2s;text-align:left;font-family:'DM Sans',sans-serif;line-height:1.6;display:flex;align-items:flex-start;gap:10px}
+.opt:hover:not(.locked){border-color:#3b4a6a;background:#1a1f30}
+.opt .letter{font-family:'DM Mono',monospace;font-weight:600;font-size:13px;color:var(--text2);min-width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:rgba(255,255,255,.04);flex-shrink:0;margin-top:1px}
+.opt.correct{border-color:var(--green2);background:var(--greenBg)}.opt.correct .letter{background:var(--green);color:#fff}
+.opt.wrong{border-color:var(--red2);background:var(--redBg)}.opt.wrong .letter{background:var(--red);color:#fff}
+.opt.locked{cursor:default;opacity:.7}.opt.correct.locked{opacity:1}.opt.dimmed{opacity:.45}
+.fb{margin-top:14px;padding:16px;border-radius:10px;animation:fadeUp .3s ease both;font-size:13.5px;line-height:1.75}
+.fb.ok{background:var(--greenBg);border:1px solid rgba(34,197,94,.15)}.fb.ok .fb-tag{color:var(--green)}
+.fb.no{background:var(--redBg);border:1px solid rgba(239,68,68,.15)}.fb.no .fb-tag{color:var(--red)}
+.fb-tag{font-weight:700;font-size:12px;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;font-family:'DM Mono',monospace}
+.fb-text{color:var(--text)}.fb-ref{font-family:'DM Mono',monospace;font-size:11px;color:var(--text2);margin-top:8px}
+.fb-trap{margin-top:10px;padding:10px 12px;background:var(--amberBg);border:1px solid rgba(245,158,11,.12);border-radius:8px}
+.fb-trap .trap-tag{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;color:var(--amber);font-weight:600;margin-bottom:4px}
+.fb-trap p{font-size:12.5px;color:var(--text);line-height:1.6}
+.nav{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.btn{padding:10px 20px;border-radius:9px;border:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-primary{background:var(--teal);color:#fff}.btn-primary:hover{background:#0d9488}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text2)}.btn-ghost:hover{border-color:#3b4a6a;color:var(--white)}
+.results{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:28px;animation:fadeUp .4s ease both}
+.results h2{font-size:20px;color:var(--white);margin-bottom:16px}
+.score-big{font-family:'DM Mono',monospace;font-size:48px;font-weight:700;margin-bottom:4px}
+.score-ok{color:var(--green)}.score-mid{color:var(--amber)}.score-bad{color:var(--red)}
+.modes{display:grid;gap:10px;margin-top:16px}
+.mode-btn{background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:18px 20px;cursor:pointer;transition:all .2s;text-align:left;font-family:'DM Sans',sans-serif}
+.mode-btn:hover{border-color:var(--teal);background:#131828}
+.mode-btn h3{font-size:15px;color:var(--white);margin-bottom:3px}.mode-btn p{font-size:12px;color:var(--text2)}
+.review-item{padding:12px 16px;background:var(--card2);border-radius:8px;margin-bottom:8px;font-size:13px;line-height:1.6}
+.scale{display:flex;align-items:center;gap:4px;margin:6px 0;font-size:12px;font-family:'DM Mono',monospace}
+.scale .bar{height:18px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:600}
+</style>
+</head>
+<body>
+<div class="shell" id="app"></div>
+<script>
+const theory=[
+{id:"diseño-datos",title:"Diseño de datos: Visión general",icon:"🗄️",html:`
+<p>El <strong>diseño de datos</strong> transforma los modelos de información creados durante el análisis en <strong>estructuras de datos</strong> necesarias para implementar el software. Es el puente entre el modelo ER del análisis y las tablas/esquemas reales.</p>
+<h3>Niveles de diseño de datos (Pressman)</h3>
+<ol>
+<li><strong>Nivel arquitectónico:</strong> ¿Qué tipo de almacén? Relacional, NoSQL, archivos, data warehouse. Decisión basada en atributos de calidad.</li>
+<li><strong>Nivel de componente:</strong> Estructuras de datos dentro de los módulos. Arrays, listas, árboles, hash maps que el código usa internamente.</li>
+<li><strong>Nivel de programa:</strong> Esquema de la base de datos. Tablas, columnas, tipos, restricciones, índices, relaciones FK.</li>
+</ol>
+<h3>Principios del diseño de datos</h3>
+<ul>
+<li>Aplicar los mismos principios de diseño que al software: <strong>refinamiento, abstracción, ocultamiento de información</strong></li>
+<li>Identificar las <strong>estructuras de datos canónicas</strong> (listas, pilas, colas, árboles, grafos) que mejor se ajusten</li>
+<li>Usar un <strong>diccionario de datos</strong> para definir el significado de cada elemento</li>
+<li>Posponer decisiones de bajo nivel (tipos exactos, índices) hasta el diseño detallado</li>
+</ul>
+<div class="tip"><strong>⚡ EGEL:</strong> Si te preguntan "en qué nivel se decide usar MongoDB vs PostgreSQL" → nivel arquitectónico. Si preguntan "qué tabla guarda los pedidos con qué columnas" → nivel de programa. Si preguntan "qué estructura usa internamente el módulo de caché" → nivel de componente.</div>
+`,ref:"Pressman (2010) Cap. 9 · SWEBOK v3.0 Cap. 2"},
+
+{id:"diccionario",title:"Diccionario de datos y modelo ER → Esquema",icon:"📖",html:`
+<p>El <strong>diccionario de datos</strong> es un repositorio centralizado que describe cada elemento de datos: nombre, tipo, rango, significado, quién lo produce, quién lo consume.</p>
+<h3>¿Para qué sirve?</h3>
+<ul>
+<li>Eliminar <strong>ambigüedad</strong>: ¿"estado" es estado civil, estado de pedido o estado geográfico?</li>
+<li>Garantizar <strong>consistencia</strong>: todos usan la misma definición y formato</li>
+<li>Base para diseñar el esquema de BD</li>
+</ul>
+<h3>Del modelo ER al esquema relacional</h3>
+<ul>
+<li><strong>Entidad</strong> → Tabla</li>
+<li><strong>Atributo</strong> → Columna</li>
+<li><strong>Relación 1:N</strong> → FK en el lado "muchos"</li>
+<li><strong>Relación M:N</strong> → Tabla intermedia (pivote) con las PKs de ambas entidades</li>
+<li><strong>Atributo multivaluado</strong> → Tabla separada con FK a la entidad padre</li>
+<li><strong>Jerarquía (herencia)</strong> → 3 estrategias: tabla por jerarquía, tabla por subclase, tabla por clase concreta</li>
+</ul>
+<div class="ex"><strong>Ejemplo M:N:</strong> Estudiante ↔ Materia. Se crea tabla <code>Inscripción(estudiante_id FK, materia_id FK, fecha, calificación)</code>. Las PKs de ambos forman la PK compuesta o se agrega un ID propio.</div>
+<div class="tip"><strong>⚡ EGEL:</strong> Si te dan un ER con relación M:N y preguntan cuántas tablas se generan → son 3: las dos entidades + la tabla pivote. Si te dan un atributo multivaluado → tabla separada.</div>
+`,ref:"Pressman (2010) Cap. 9 · Elmasri & Navathe (2016) Cap. 7"},
+
+{id:"normalizacion",title:"Normalización: 1FN, 2FN, 3FN",icon:"🔧",html:`
+<p>La <strong>normalización</strong> es el proceso de organizar las tablas para <strong>eliminar redundancia y anomalías</strong> de inserción, actualización y borrado.</p>
+<h3>1FN — Primera Forma Normal</h3>
+<p>Cada celda contiene un <strong>valor atómico</strong> (indivisible). No hay grupos repetitivos ni listas dentro de una celda.</p>
+<div class="ex"><strong>Viola 1FN:</strong> Una columna "teléfonos" con valor "5551234, 5555678". <strong>Solución:</strong> Crear tabla <code>Teléfonos(persona_id FK, teléfono)</code>.</div>
+<h3>2FN — Segunda Forma Normal</h3>
+<p>Cumple 1FN + todo atributo no clave depende de la <strong>clave primaria COMPLETA</strong>, no de solo una parte. Solo aplica si la PK es compuesta.</p>
+<div class="ex"><strong>Viola 2FN:</strong> Tabla <code>Inscripción(estudiante_id, materia_id, nombre_materia)</code>. <code>nombre_materia</code> depende solo de <code>materia_id</code>, no de la PK completa. <strong>Solución:</strong> Mover <code>nombre_materia</code> a la tabla <code>Materia</code>.</div>
+<h3>3FN — Tercera Forma Normal</h3>
+<p>Cumple 2FN + ningún atributo no clave depende de otro atributo no clave (eliminar <strong>dependencias transitivas</strong>).</p>
+<div class="ex"><strong>Viola 3FN:</strong> Tabla <code>Empleado(id, depto_id, nombre_depto)</code>. <code>nombre_depto</code> depende de <code>depto_id</code>, no directamente de <code>id</code>. <strong>Solución:</strong> Mover <code>nombre_depto</code> a tabla <code>Departamento</code>.</div>
+<div class="tip"><strong>⚡ EGEL:</strong> 1FN = valores atómicos. 2FN = sin dependencias parciales de PK compuesta. 3FN = sin dependencias transitivas. Si te dan una tabla y preguntan qué forma normal viola → busca estas tres cosas en orden.</div>
+`,ref:"Elmasri & Navathe (2016) Cap. 10 · Pressman (2010) Cap. 9"},
+
+{id:"nosql",title:"SQL vs NoSQL: Cuándo elegir cada uno",icon:"⚖️",html:`
+<p>La elección de modelo de datos es una <strong>decisión arquitectónica</strong> (nivel más alto del diseño de datos).</p>
+<div class="vs">
+<div><h4 style="color:var(--blue)">SQL (Relacional)</h4>
+<p>Datos estructurados con relaciones claras. ACID garantizado. Esquema fijo. Consultas complejas con JOINs. Integridad referencial por FK.</p>
+<p><strong>Ideal para:</strong> Transacciones financieras, ERP, CRM, sistemas con integridad crítica.</p></div>
+<div><h4 style="color:var(--orange)">NoSQL</h4>
+<p>Datos flexibles o semiestructurados. BASE (Basically Available, Soft state, Eventually consistent). Esquema dinámico. Escala horizontal fácil.</p>
+<p><strong>Ideal para:</strong> Redes sociales, IoT, catálogos, tiempo real, big data.</p></div>
+</div>
+<h3>Tipos de NoSQL</h3>
+<ul>
+<li><strong>Documento:</strong> MongoDB, CouchDB. Datos en JSON/BSON. Flexible, bueno para catálogos y CMS.</li>
+<li><strong>Clave-Valor:</strong> Redis, DynamoDB. Ultra-rápido para caché y sesiones.</li>
+<li><strong>Columnar:</strong> Cassandra, HBase. Optimizado para escrituras masivas y series de tiempo.</li>
+<li><strong>Grafos:</strong> Neo4j. Relaciones complejas: redes sociales, recomendaciones, rutas.</li>
+</ul>
+<div class="tip"><strong>⚡ EGEL:</strong> Si el escenario dice "transacciones ACID obligatorias" → SQL. Si dice "escalar horizontalmente con datos flexibles" → NoSQL. Si dice "relaciones tipo red social" → Grafos. El Teorema CAP también puede aparecer: solo puedes tener 2 de 3 (Consistencia, Disponibilidad, Tolerancia a particiones).</div>
+`,ref:"Elmasri & Navathe (2016) Cap. 24 · SWEBOK v3.0 Cap. 2"},
+
+{id:"comp-design",title:"Diseño de componentes",icon:"🧩",html:`
+<p>El <strong>diseño de componentes</strong> (o diseño a nivel de módulo) define la lógica de procesamiento <strong>dentro</strong> de cada módulo/clase. Es el nivel más detallado del diseño.</p>
+<h3>¿Qué se define en este nivel?</h3>
+<ul>
+<li><strong>Interfaz del componente:</strong> qué métodos expone, qué recibe, qué retorna</li>
+<li><strong>Lógica interna:</strong> algoritmos, decisiones, flujos de control</li>
+<li><strong>Estructuras de datos locales:</strong> qué datos maneja internamente</li>
+<li><strong>Dependencias:</strong> qué otros componentes necesita</li>
+</ul>
+<h3>Principios guía</h3>
+<ul>
+<li><strong>Ocultamiento de información (Parnas):</strong> Los detalles internos están ocultos detrás de una interfaz estable. Los clientes no saben CÓMO funciona, solo QUÉ hace.</li>
+<li><strong>Independencia funcional:</strong> Cada componente hace UNA cosa bien definida (alta cohesión) con mínima dependencia de otros (bajo acoplamiento).</li>
+<li><strong>Refinamiento paso a paso:</strong> Se descompone progresivamente en más detalle.</li>
+</ul>
+<div class="tip"><strong>⚡ EGEL:</strong> El principio de Parnas (ocultamiento de información) es el fundamento de la encapsulación en OOP. Si te preguntan "¿quién propuso que los módulos oculten sus decisiones de diseño?" → Parnas (1972).</div>
+`,ref:"Pressman (2010) Cap. 10 · Parnas (1972) · SWEBOK v3.0 Cap. 2"},
+
+{id:"cohesion-levels",title:"Los 7 niveles de cohesión",icon:"🎯",html:`
+<p>La cohesión mide qué tan <strong>relacionadas y enfocadas</strong> están las responsabilidades dentro de un módulo. Pressman y SWEBOK definen 7 niveles, de PEOR a MEJOR:</p>
+<h3>De peor a mejor ↑</h3>
+<ol>
+<li><strong>Coincidental (la peor):</strong> Los elementos no tienen relación entre sí. Están juntos por accidente. Ejemplo: clase <code>Utilidades</code> con calcularIVA(), enviarEmail(), formatearFecha(), redimensionarImagen().</li>
+<li><strong>Lógica:</strong> Los elementos hacen cosas de la misma categoría lógica pero no se relacionan entre sí. Se selecciona cuál ejecutar con un flag. Ejemplo: clase <code>Comunicación</code> con enviar(tipo) donde tipo es "email", "sms", "fax".</li>
+<li><strong>Temporal:</strong> Los elementos se ejecutan en el mismo momento/fase. Ejemplo: <code>inicializarSistema()</code> que abre BD, carga config, inicializa log y prepara caché — solo comparten el CUÁNDO.</li>
+<li><strong>Procedural:</strong> Los elementos siguen una secuencia de ejecución relacionada con un procedimiento. Ejemplo: <code>validarYGuardar()</code> que valida datos y después guarda — la relación es el ORDEN, no los datos.</li>
+<li><strong>Comunicacional:</strong> Los elementos operan sobre los MISMOS datos. Ejemplo: módulo que lee un archivo, lo parsea y genera estadísticas del mismo archivo.</li>
+<li><strong>Secuencial:</strong> La salida de un elemento es la entrada del siguiente. Ejemplo: <code>leerCSV() → parsearDatos() → calcularPromedio()</code> donde cada paso alimenta al siguiente.</li>
+<li><strong>Funcional (la mejor):</strong> TODOS los elementos contribuyen a UNA sola función bien definida. Ejemplo: <code>CalculadoraImpuestoISR</code> donde todo dentro calcula ISR y nada más.</li>
+</ol>
+<div class="tip"><strong>⚡ EGEL:</strong> Memoriza: Co-Lo-Te-Pro-Co-Se-Fu (Coincidental, Lógica, Temporal, Procedural, Comunicacional, Secuencial, Funcional). Del peor al mejor. Si te dan un escenario, identifica QUÉ relaciona a los elementos: ¿nada? → coincidental. ¿Mismos datos? → comunicacional. ¿Una sola tarea? → funcional.</div>
+`,ref:"Pressman (2010) Cap. 8 · SWEBOK v3.0 Cap. 2 · Yourdon & Constantine (1979)"},
+
+{id:"coupling-levels",title:"Los 7 niveles de acoplamiento",icon:"🔗",html:`
+<p>El acoplamiento mide qué tan <strong>dependiente</strong> es un módulo de otro. De MEJOR a PEOR:</p>
+<h3>De mejor a peor ↓</h3>
+<ol>
+<li><strong>Sin acoplamiento (ideal):</strong> Los módulos no se conocen en absoluto. Solo posible si no necesitan comunicarse.</li>
+<li><strong>De datos (el mejor práctico):</strong> Los módulos se comunican solo pasando <strong>datos simples</strong> (parámetros primitivos). Ejemplo: <code>calcularImpuesto(monto, tasa)</code>.</li>
+<li><strong>De estampado (stamp):</strong> Se pasan <strong>estructuras de datos completas</strong> pero el módulo receptor solo usa una parte. Ejemplo: pasar todo el objeto <code>Cliente</code> a un método que solo necesita el email.</li>
+<li><strong>De control:</strong> Un módulo pasa un <strong>flag o parámetro de control</strong> que le dice al otro QUÉ hacer. Ejemplo: <code>procesar(datos, modo="rápido")</code> donde el flag cambia la lógica interna.</li>
+<li><strong>Externo:</strong> Los módulos comparten un <strong>formato impuesto externamente</strong>: protocolo de comunicación, formato de archivo, interfaz de dispositivo.</li>
+<li><strong>Común (global):</strong> Los módulos comparten <strong>datos globales</strong> (variables globales, BD global sin interfaz). Un cambio afecta a todos.</li>
+<li><strong>De contenido (el peor):</strong> Un módulo accede directamente a los <strong>datos internos o código</strong> de otro. Ejemplo: modificar una variable privada de otra clase por reflexión, o saltar a una instrucción interna de otro módulo.</li>
+</ol>
+<div class="tip"><strong>⚡ EGEL:</strong> Memoriza: Da-Es-Co-Ex-Co-Con (Datos, Estampado, Control, Externo, Común, Contenido). Del mejor al peor. Clave: si pasan datos simples → de datos. Si pasan un flag que cambia comportamiento → de control. Si acceden a internos → de contenido.</div>
+`,ref:"Pressman (2010) Cap. 8 · SWEBOK v3.0 Cap. 2 · Yourdon & Constantine (1979)"},
+
+{id:"fan-in-out",title:"Fan-in, Fan-out y métricas de diseño",icon:"📊",html:`
+<p>Son métricas estructurales que evalúan la calidad del diseño de módulos.</p>
+<h3>Fan-in</h3>
+<p>Número de módulos que <strong>LLAMAN</strong> a un módulo dado. Fan-in ALTO = el módulo es muy reutilizado = <strong>BUENO</strong>.</p>
+<div class="ex"><strong>Ejemplo:</strong> Un módulo <code>Logger</code> que es llamado por 15 módulos diferentes tiene fan-in = 15. Es bueno: indica reutilización.</div>
+<h3>Fan-out</h3>
+<p>Número de módulos que un módulo dado <strong>LLAMA</strong>. Fan-out ALTO = el módulo depende de muchos = <strong>POTENCIALMENTE MALO</strong> (demasiada complejidad/coordinación).</p>
+<div class="ex"><strong>Ejemplo:</strong> Un módulo <code>OrquestadorPedido</code> que llama a 12 módulos diferentes tiene fan-out = 12. Podría ser excesivo — es candidato a refactorizar.</div>
+<h3>Regla general</h3>
+<ul>
+<li><strong>Fan-in alto:</strong> Deseable (módulo reutilizable y bien diseñado)</li>
+<li><strong>Fan-out alto:</strong> Sospechoso (módulo con demasiadas dependencias, posible baja cohesión)</li>
+<li><strong>Equilibrio ideal:</strong> Módulos con alto fan-in y bajo fan-out</li>
+</ul>
+<div class="tip"><strong>⚡ EGEL:</strong> Fan-in alto = BUENO (reutilización). Fan-out alto = CUIDADO (muchas dependencias). Si te preguntan "¿qué indica un módulo con fan-in alto?" → es muy reutilizado = bien diseñado.</div>
+`,ref:"Pressman (2010) Cap. 8 · SWEBOK v3.0 Cap. 2"},
+
+{id:"indep-funcional",title:"Independencia funcional y diseño por contrato",icon:"📜",html:`
+<p><strong>Independencia funcional</strong> es el objetivo máximo del diseño de componentes: cada módulo hace UNA cosa bien (alta cohesión) con mínima conexión a otros (bajo acoplamiento).</p>
+<h3>Diseño por contrato (Meyer, 1988)</h3>
+<p>Cada componente tiene un <strong>"contrato"</strong> que define:</p>
+<ul>
+<li><strong>Precondiciones:</strong> Qué debe ser verdad ANTES de llamar al método. Responsabilidad del CLIENTE.</li>
+<li><strong>Postcondiciones:</strong> Qué garantiza el método DESPUÉS de ejecutar. Responsabilidad del PROVEEDOR.</li>
+<li><strong>Invariantes:</strong> Qué debe ser SIEMPRE verdad durante la vida del objeto.</li>
+</ul>
+<div class="ex"><strong>Ejemplo:</strong> Método <code>retirar(monto)</code> en cuenta bancaria. Precondición: monto > 0 Y monto ≤ saldo. Postcondición: saldo = saldo_anterior - monto. Invariante: saldo ≥ 0 siempre.</div>
+<h3>¿Por qué importa?</h3>
+<p>Si el cliente cumple la precondición y el método aún falla → es un BUG del proveedor. Si el cliente no cumple la precondición → es culpa del cliente. Define claramente dónde está la responsabilidad.</p>
+<div class="tip"><strong>⚡ EGEL:</strong> Si te dan un escenario donde un método falla porque recibió datos inválidos y preguntan de quién es la culpa → depende de si había precondición definida. Con diseño por contrato, la responsabilidad es clara.</div>
+`,ref:"Meyer (1988) · Pressman (2010) Cap. 10 · SWEBOK v3.0 Cap. 2"},
+
+{id:"diagramas",title:"Diagramas de diseño de componentes",icon:"📐",html:`
+<p>El diseño de componentes se representa con varios diagramas UML y notaciones:</p>
+<h3>Diagrama de componentes (UML)</h3>
+<ul>
+<li>Muestra los <strong>componentes de software</strong> y sus dependencias/interfaces</li>
+<li>Componente = pieza reemplazable que cumple una función (módulo, librería, servicio)</li>
+<li>Se representan como rectángulos con el ícono de componente (dos rectangulitos a la izquierda)</li>
+<li>Las interfaces se representan como círculos (proporcionada) o semicírculos (requerida)</li>
+</ul>
+<h3>Diagrama de paquetes (UML)</h3>
+<ul>
+<li>Agrupa elementos en <strong>paquetes</strong> (carpetas lógicas)</li>
+<li>Muestra dependencias entre paquetes con flechas punteadas</li>
+<li>Útil para ver la organización general del sistema</li>
+</ul>
+<h3>Pseudocódigo y diagramas de flujo</h3>
+<p>Para la lógica INTERNA de un componente: pseudocódigo estructura la secuencia de decisiones y bucles. Los diagramas de flujo (flowcharts) visualizan la misma lógica gráficamente.</p>
+<div class="tip"><strong>⚡ EGEL:</strong> Si preguntan qué diagrama UML muestra las dependencias entre módulos/librerías → Diagrama de componentes. Si preguntan qué diagrama organiza clases en grupos → Diagrama de paquetes.</div>
+`,ref:"Pressman (2010) Cap. 10 · Sommerville (2011) Cap. 5"},
+
+{id:"resumen",title:"Resumen: Claves para el EGEL",icon:"📝",html:`
+<h3>Diseño de datos</h3>
+<ul>
+<li><strong>Nivel arquitectónico:</strong> SQL vs NoSQL, tipo de BD</li>
+<li><strong>Nivel de programa:</strong> Tablas, columnas, FKs, esquema</li>
+<li><strong>Normalización:</strong> 1FN (atómico), 2FN (sin dep. parcial), 3FN (sin dep. transitiva)</li>
+<li><strong>ER → Tablas:</strong> 1:N = FK en "muchos", M:N = tabla pivote</li>
+</ul>
+<h3>Cohesión (PEOR → MEJOR)</h3>
+<p>Coincidental → Lógica → Temporal → Procedural → Comunicacional → Secuencial → <strong>Funcional</strong></p>
+<h3>Acoplamiento (MEJOR → PEOR)</h3>
+<p>Datos → Estampado → Control → Externo → Común → <strong>Contenido</strong></p>
+<h3>Métricas</h3>
+<ul>
+<li><strong>Fan-in alto = BUENO</strong> (reutilización)</li>
+<li><strong>Fan-out alto = CUIDADO</strong> (demasiadas dependencias)</li>
+</ul>
+<h3>Conceptos clave</h3>
+<ul>
+<li><strong>Parnas:</strong> Ocultamiento de información</li>
+<li><strong>Meyer:</strong> Diseño por contrato (pre/post/invariante)</li>
+<li><strong>Yourdon & Constantine:</strong> Cohesión + Acoplamiento</li>
+<li><strong>Meta:</strong> Alta cohesión + Bajo acoplamiento = Independencia funcional</li>
+</ul>
+`,ref:"Pressman (2010) Cap. 8-10 · SWEBOK v3.0 Cap. 2 · Elmasri & Navathe (2016)"}
+];
+
+const Q=[
+{n:1,q:"Una tabla Pedido tiene columnas: pedido_id, cliente_id, nombre_cliente, email_cliente. El nombre y email dependen de cliente_id, no de pedido_id directamente. ¿Qué forma normal viola y por qué?",o:["1FN — tiene valores no atómicos.","2FN — dependencia parcial de PK compuesta.","3FN — dependencia transitiva: pedido_id → cliente_id → nombre.","No viola ninguna; es diseño correcto."],c:2,x:"nombre_cliente y email_cliente dependen de cliente_id, y cliente_id depende de pedido_id. Eso es una dependencia TRANSITIVA (A→B→C). 3FN exige eliminarlas. Solución: mover nombre y email a tabla Cliente.",ref:"Elmasri & Navathe (2016) Cap. 10",trap:"B (2FN) solo aplica con PK COMPUESTA. Aquí pedido_id es PK simple, así que 2FN no es el problema. La dependencia transitiva (pedido_id → cliente_id → nombre) es violación de 3FN."},
+
+{n:2,q:"Un módulo GestorArchivos tiene los métodos: comprimirZIP(), enviarPorFTP(), generarThumbnail(), calcularChecksum(), registrarEnLog(). Los métodos no comparten datos ni lógica entre sí. ¿Nivel de cohesión?",o:["Funcional — todo relacionado con archivos.","Comunicacional — operan sobre el mismo tipo de dato.","Lógica — categoría similar pero sin relación real.","Coincidental — sin relación; juntos por accidente."],c:3,x:"Los métodos no comparten datos, no siguen una secuencia, no contribuyen a una sola función. Están juntos solo porque 'tienen que ver con archivos' — pero comprimir, enviar, thumbnail, checksum y log son funciones independientes sin relación real = coincidental.",ref:"Pressman (2010) Cap. 8 · Yourdon & Constantine (1979)",trap:"A suena bien ('todo de archivos') pero cohesión funcional significa que TODOS los elementos contribuyen a UNA sola función. Aquí hay 5 funciones diferentes sin conexión."},
+
+{n:3,q:"Un método generarReporte(datos, formato) recibe un parámetro 'formato' que puede ser 'pdf', 'excel' o 'csv'. Internamente tiene un switch que elige la lógica según el formato. ¿Tipo de acoplamiento entre el módulo que llama y generarReporte?",o:["De datos — solo pasa parámetros.","De estampado — pasa una estructura.","De control — pasa un flag que determina el comportamiento.","Común — comparten datos globales."],c:2,x:"El parámetro 'formato' es un FLAG DE CONTROL: le dice al módulo QUÉ camino lógico tomar internamente. No es un dato que se procesa, es una instrucción que controla el comportamiento = acoplamiento de control.",ref:"Pressman (2010) Cap. 8",trap:"A (de datos) sería si 'formato' fuera un dato que se procesa (como un string a formatear). Aquí 'formato' CAMBIA la lógica del método = control, no dato."},
+
+{n:4,q:"Un sistema de hospital tiene: Paciente ↔ Doctor (un paciente tiene muchos doctores, un doctor atiende muchos pacientes). Al transformar a esquema relacional, ¿cuántas tablas se generan como MÍNIMO?",o:["2 tablas (Paciente y Doctor).","3 tablas (Paciente, Doctor y tabla pivote).","4 tablas (Paciente, Doctor, Cita, Hospital).","1 tabla con todos los datos."],c:1,x:"Una relación M:N SIEMPRE genera tabla intermedia (pivote). Paciente + Doctor + Consulta(paciente_id FK, doctor_id FK). Mínimo 3 tablas. La tabla pivote puede tener atributos propios como fecha y diagnóstico.",ref:"Elmasri & Navathe (2016) Cap. 7",trap:"A olvida la tabla pivote. En relacional NO puedes representar M:N sin tabla intermedia — no existe el concepto de 'lista' dentro de una celda (eso violaría 1FN)."},
+
+{n:5,q:"Un módulo ServicioClima es llamado por: Dashboard, AppMóvil, ServicioAlertas, ReporteSemanal, WidgetEscritorio, ChatBot, AsistenteVoz. ¿Qué métrica de diseño destaca y qué indica?",o:["Fan-out alto — tiene demasiadas dependencias.","Fan-in alto — es muy reutilizado, buena señal.","Bajo acoplamiento — no depende de nadie.","Alta cohesión — hace muchas cosas bien."],c:1,x:"7 módulos LLAMAN a ServicioClima = fan-in = 7. Fan-in alto indica que el módulo es reutilizable y bien diseñado. Es una buena señal de diseño modular.",ref:"Pressman (2010) Cap. 8",trap:"A confunde fan-in con fan-out. Fan-in = quién ME llama. Fan-out = a quién YO llamo. Aquí ServicioClima ES llamado por 7 = fan-in alto = bueno."},
+
+{n:6,q:"Un startup necesita almacenar perfiles de usuario con campos que varían: algunos tienen dirección, otros redes sociales, otros datos de empresa. Los campos cambian frecuentemente y no se hacen JOINs complejos. ¿Modelo de datos?",o:["Relacional con muchas tablas normalizadas.","Documento (MongoDB) — esquema flexible.","Grafos (Neo4j) — relaciones complejas.","Columnar (Cassandra) — escrituras masivas."],c:1,x:"Datos semiestructurados con campos variables que cambian frecuentemente = documento (JSON/BSON). MongoDB permite esquema dinámico: cada perfil puede tener campos diferentes sin migración de esquema.",ref:"Elmasri & Navathe (2016) Cap. 24",trap:"A (relacional) requeriría schema migrations constantes y columnas NULL por todos lados. C (grafos) es para relaciones tipo red, no para perfiles con campos variables."},
+
+{n:7,q:"Un método procesarLote() hace: abrir conexión BD, leer CSV, transformar datos, insertar en BD, cerrar conexión, enviar email de confirmación. Todo se ejecuta en esta secuencia durante el proceso de carga nocturna. ¿Cohesión?",o:["Funcional — cumple una función completa.","Secuencial — la salida de cada paso alimenta al siguiente.","Temporal — todo se ejecuta en el mismo momento.","Procedural — siguen un orden pero sin flujo de datos."],c:3,x:"Los elementos se ejecutan en una secuencia relacionada con un procedimiento (el proceso de carga nocturna), pero NO necesariamente la salida de uno es la entrada del siguiente (abrir BD no 'produce' algo que leer CSV consume). La relación es el ORDEN del procedimiento, no el flujo de datos = procedural.",ref:"Pressman (2010) Cap. 8",trap:"B (secuencial) requiere que la salida de cada paso sea la entrada del siguiente. Aquí 'abrir BD' no produce datos que 'leer CSV' consuma. A (funcional) sería si todo contribuyera a UNA sola función atómica."},
+
+{n:8,q:"David Parnas (1972) propuso un principio fundamental que dice: cada módulo debe ocultar una decisión de diseño detrás de una interfaz estable. ¿Cuál es ese principio y cómo se relaciona con OOP?",o:["Principio abierto/cerrado — extensión sin modificación.","Ocultamiento de información — base de la encapsulación.","Inversión de dependencias — depender de abstracciones.","Separación de concerns — dividir por responsabilidades."],c:1,x:"Parnas propuso el 'information hiding': cada módulo oculta una decisión de diseño (algoritmo, formato de datos, hardware) detrás de una interfaz. Esto se convirtió en la BASE de la encapsulación en OOP: atributos privados + métodos públicos.",ref:"Parnas (1972) · Pressman (2010) Cap. 8",trap:"A (OCP) es de Meyer/Martin, no de Parnas. C (DIP) es de Martin. La contribución histórica de Parnas es específicamente el ocultamiento de información."},
+
+{n:9,q:"Un método retirar(monto) tiene precondición: monto > 0 AND saldo >= monto. Un módulo llama retirar(-50). El método lanza una excepción. ¿De quién es la responsabilidad del error según diseño por contrato?",o:["Del método retirar — debería manejar el caso.","Del módulo que llama — violó la precondición.","De ambos — responsabilidad compartida.","Del arquitecto — debió diseñar mejor."],c:1,x:"En diseño por contrato (Meyer): si la PRECONDICIÓN no se cumple, la culpa es del CLIENTE (quien llama). El proveedor (retirar) NO está obligado a funcionar si el contrato se rompe. -50 viola monto > 0 = culpa del llamador.",ref:"Meyer (1988) · Pressman (2010) Cap. 10",trap:"A parece 'defensiva' pero en diseño por contrato las responsabilidades están claramente divididas. El proveedor no tiene que validar lo que el contrato ya define como responsabilidad del cliente."},
+
+{n:10,q:"Una tabla tiene columna 'direcciones' con valor '5ta Avenida 123; Boulevard Norte 456; Calle Sur 789'. ¿Qué forma normal viola?",o:["2FN — dependencia parcial.","3FN — dependencia transitiva.","1FN — valores no atómicos.","No viola ninguna."],c:2,x:"Una celda con múltiples valores separados por punto y coma NO es atómica. 1FN exige que cada celda tenga UN solo valor indivisible. Solución: crear tabla Direcciones(persona_id FK, dirección).",ref:"Elmasri & Navathe (2016) Cap. 10",trap:"B y A requieren que 1FN ya se cumpla. Siempre evalúa las formas normales EN ORDEN: primero verifica 1FN antes de pensar en 2FN o 3FN."},
+
+{n:11,q:"Dos módulos se comunican así: MóduloA tiene acceso directo a las variables internas de MóduloB y modifica su atributo privado _saldo usando reflexión. ¿Tipo de acoplamiento?",o:["De datos — accede a datos del otro.","De control — controla el comportamiento.","Común — comparten datos globales.","De contenido — accede a internos de otro módulo."],c:3,x:"Acceder directamente a los datos INTERNOS (privados) de otro módulo = acoplamiento de contenido, el PEOR nivel. Rompe completamente la encapsulación. Cualquier cambio interno en MóduloB puede romper MóduloA.",ref:"Pressman (2010) Cap. 8 · Yourdon & Constantine (1979)",trap:"A (de datos) suena parecido pero es cuando se pasan datos POR PARÁMETROS (la forma correcta). Aquí se INVADE el interior del módulo = contenido."},
+
+{n:12,q:"¿Qué diagrama UML muestra los módulos/librerías del sistema, sus interfaces proporcionadas (círculo) y requeridas (semicírculo), y las dependencias entre ellos?",o:["Diagrama de clases.","Diagrama de despliegue.","Diagrama de componentes.","Diagrama de paquetes."],c:2,x:"El diagrama de COMPONENTES muestra componentes de software (módulos, librerías, servicios), sus interfaces (proporcionada = círculo = lollipop, requerida = semicírculo = socket) y las dependencias entre ellos.",ref:"Pressman (2010) Cap. 10 · Sommerville (2011) Cap. 5",trap:"A (clases) muestra clases individuales, no componentes/módulos. D (paquetes) agrupa elementos pero no muestra interfaces proporcionadas/requeridas con la notación lollipop/socket."},
+
+{n:13,q:"Un sistema bancario requiere: transacciones ACID, integridad referencial estricta, consultas complejas con JOINs de 5 tablas, auditoría completa y cumplimiento regulatorio. ¿Modelo de datos?",o:["Documento (MongoDB) — flexibilidad.","Clave-Valor (Redis) — velocidad.","Relacional (PostgreSQL) — ACID e integridad.","Grafos (Neo4j) — relaciones."],c:2,x:"ACID obligatorio + integridad referencial + JOINs complejos + regulación = relacional sin duda. Las BD NoSQL sacrifican consistencia/integridad por flexibilidad/escala. Para banca, la consistencia es innegociable.",ref:"Elmasri & Navathe (2016) Cap. 24",trap:"A (MongoDB) NO garantiza ACID entre documentos por defecto y no tiene FKs con integridad referencial. En banca, eso es inaceptable."},
+
+{n:14,q:"Un módulo MotorFísica de un videojuego: calcularColisión(obj1, obj2) toma las posiciones de ambos objetos, calcula si chocan, devuelve el vector de rebote que luego se usa para actualizar posiciones. La salida del cálculo alimenta al siguiente paso. ¿Cohesión del cálculo interno?",o:["Procedural — siguen un orden fijo.","Comunicacional — operan sobre los mismos datos.","Funcional — todo contribuye a una función.","Secuencial — la salida de cada paso alimenta al siguiente."],c:3,x:"Los pasos internos forman una cadena donde la salida de uno es la entrada del siguiente: posiciones → detección de colisión → punto de impacto → cálculo de vector → vector de rebote. Cada paso consume lo que el anterior produjo = cohesión secuencial.",ref:"Pressman (2010) Cap. 8",trap:"B (comunicacional) sería si los pasos operaran sobre los mismos datos SIN que la salida de uno alimente al siguiente. C (funcional) sería si todo contribuyera a una sola operación atómica sin pasos intermedios."},
+
+{n:15,q:"Una tabla Inscripción tiene PK compuesta (estudiante_id, curso_id) y columnas: calificación, nombre_curso, créditos_curso. nombre_curso y créditos_curso dependen SOLO de curso_id. ¿Qué forma normal viola?",o:["1FN — valores no atómicos.","2FN — dependencia parcial de PK compuesta.","3FN — dependencia transitiva.","BCNF — determinante no es clave candidata."],c:1,x:"PK compuesta (estudiante_id, curso_id). nombre_curso y créditos_curso dependen SOLO de curso_id (parte de la PK), no de la PK completa. Eso es dependencia PARCIAL = viola 2FN. Solución: mover nombre_curso y créditos_curso a la tabla Curso.",ref:"Elmasri & Navathe (2016) Cap. 10",trap:"C (3FN) es dependencia TRANSITIVA (A→B→C). Aquí el problema es que atributos dependen de PARTE de la PK compuesta, no de la PK completa = 2FN, no 3FN."}
+];
+
+const L=["A","B","C","D"];
+let S={view:"menu",pool:[],cur:0,ans:{},ti:0};
+function sh(a){let b=[...a];for(let i=b.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+function startQuiz(){S.pool=sh([...Q]);S.cur=0;S.ans={};S.view="quiz";render();window.scrollTo(0,0);}
+function pick(qi,oi){if(S.ans[qi]!==undefined)return;S.ans[qi]=oi;render();setTimeout(()=>{const e=document.getElementById('fb-'+qi);if(e)e.scrollIntoView({behavior:'smooth',block:'nearest'});},100);}
+function goTo(i){S.cur=i;render();window.scrollTo(0,0);}
+function finish(){S.view="results";render();window.scrollTo(0,0);}
+function goHome(){S.view="menu";render();window.scrollTo(0,0);}
+function showTheory(i){S.ti=i||0;S.view="theory";render();window.scrollTo(0,0);}
+
+function render(){
+  const a=document.getElementById('app');
+  if(S.view==="menu")return renderMenu(a);
+  if(S.view==="theory")return renderTheory(a);
+  if(S.view==="results")return renderResults(a);
+  if(S.view==="review")return renderReview(a);
+  renderQuiz(a);
+}
+function renderMenu(el){
+  el.innerHTML=`<div class="hdr"><div class="tag">SESIÓN 11 · MARTES 1 ABRIL · SUBÁREA 2.2</div>
+  <h1>Diseño de Datos, Componentes y Acoplamiento/Cohesión</h1>
+  <p>Normalización, ER→Esquema, SQL/NoSQL, 7 niveles de cohesión, 7 niveles de acoplamiento, Fan-in/out, Parnas, Meyer</p></div>
+  <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--text2);margin-bottom:12px">CONTENIDO</div>
+  <div class="modes">
+    <button class="mode-btn" onclick="showTheory(0)"><h3 style="color:var(--teal)">📖 Teoría</h3><p>${theory.length} fichas · Pressman, Elmasri, SWEBOK, Parnas, Meyer</p></button>
+    <button class="mode-btn" onclick="startQuiz()" style="border-color:rgba(239,68,68,.25)"><h3 style="color:#ef4444">🧪 Quiz — 15 preguntas</h3><p>Escenarios difíciles con retroalimentación y análisis de trampa</p></button>
+  </div>`;
+}
+function renderTheory(el){
+  const t=theory[S.ti];
+  el.innerHTML=`<div class="hdr" style="padding:16px 22px"><div style="display:flex;justify-content:space-between;align-items:center">
+    <div><div class="tag">TEORÍA 2.2</div></div>
+    <button class="btn btn-ghost" onclick="goHome()" style="font-size:11px;padding:6px 12px">✕</button></div></div>
+  <div class="tabs">${theory.map((th,i)=>`<button class="tab ${i===S.ti?'active':''}" onclick="S.ti=${i};render();window.scrollTo(0,0)">${th.icon} ${th.title.length>14?th.title.substring(0,14)+'…':th.title}</button>`).join('')}</div>
+  <div class="section"><h2>${t.icon} ${t.title}</h2>${t.html}<div class="ref">📖 ${t.ref}</div></div>
+  <div class="nav">
+    ${S.ti>0?`<button class="btn btn-ghost" onclick="S.ti--;render();window.scrollTo(0,0)">← Anterior</button>`:''}
+    ${S.ti<theory.length-1?`<button class="btn btn-primary" onclick="S.ti++;render();window.scrollTo(0,0)">Siguiente →</button>`:''}
+    <button class="btn btn-ghost" onclick="startQuiz()" style="margin-left:auto">🧪 Quiz</button>
+  </div>`;
+}
+function renderQuiz(el){
+  const q=S.pool[S.cur],qi=S.cur,ad=S.ans[qi]!==undefined,ok=ad&&S.ans[qi]===q.c,t=S.pool.length,d=Object.keys(S.ans).length,p=Math.round((d/t)*100);
+  el.innerHTML=`<div class="hdr" style="padding:16px 22px"><div style="display:flex;justify-content:space-between;align-items:center">
+    <div><div class="tag">QUIZ 2.2</div></div>
+    <button class="btn btn-ghost" onclick="goHome()" style="font-size:11px;padding:6px 12px">✕</button></div></div>
+  <div class="pbar"><div class="label">${d}/${t}</div><div class="track"><div class="fill" style="width:${p}%"></div></div><div class="label">${p}%</div></div>
+  <div class="qcard"><div class="qnum">P${qi+1}/${t}</div><div class="qtxt">${q.q}</div>
+  <div class="opts">${q.o.map((o,i)=>{let c='opt';if(ad){c+=' locked';if(i===q.c)c+=' correct';else if(i===S.ans[qi]&&i!==q.c)c+=' wrong';else c+=' dimmed';}return`<button class="${c}" onclick="pick(${qi},${i})"><span class="letter">${L[i]}</span><span>${o}</span></button>`;}).join('')}</div>
+  ${ad?`<div class="fb ${ok?'ok':'no'}" id="fb-${qi}"><div class="fb-tag">${ok?'✓ CORRECTO':'✗ INCORRECTO — '+L[q.c]}</div><div class="fb-text">${q.x}</div><div class="fb-ref">📖 ${q.ref}</div>${q.trap?`<div class="fb-trap"><div class="trap-tag">⚠️ TRAMPA</div><p>${q.trap}</p></div>`:''}</div>`:''}</div>
+  <div class="nav">${qi>0?`<button class="btn btn-ghost" onclick="goTo(${qi-1})">←</button>`:''}${ad&&qi<t-1?`<button class="btn btn-primary" onclick="goTo(${qi+1})">Siguiente →</button>`:''}${ad&&qi===t-1?`<button class="btn btn-primary" onclick="finish()">Resultados</button>`:''}${d===t&&qi<t-1?`<button class="btn btn-primary" onclick="finish()" style="margin-left:auto">Resultados</button>`:''}</div>
+  <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:16px">${S.pool.map((_,i)=>{const a=S.ans[i],ic=a!==undefined&&a===S.pool[i].c,iw=a!==undefined&&a!==S.pool[i].c;let bg=i===qi?'var(--teal)':ic?'var(--green)':iw?'var(--red)':'var(--card2)',bd=i===qi?'var(--teal)':ic?'var(--green2)':iw?'var(--red2)':'var(--border)';return`<button onclick="goTo(${i})" style="width:28px;height:28px;border-radius:6px;background:${bg};border:1px solid ${bd};color:${i===qi||a!==undefined?'#fff':'var(--text2)'};font-size:11px;font-family:'DM Mono',monospace;cursor:pointer;display:flex;align-items:center;justify-content:center">${i+1}</button>`;}).join('')}</div>`;
+}
+function renderResults(el){
+  const t=S.pool.length,c=Object.entries(S.ans).filter(([k,v])=>v===S.pool[+k].c).length,p=Math.round((c/t)*100),cls=p>=80?'score-ok':p>=60?'score-mid':'score-bad';
+  const wrong=S.pool.filter((_,i)=>S.ans[i]!==undefined&&S.ans[i]!==S.pool[i].c);
+  el.innerHTML=`<div class="results"><h2>Resultados — Sesión 11</h2><div class="score-big ${cls}">${c}/${t}</div><div style="font-size:14px;color:var(--text2);margin-bottom:20px">${p}%</div>
+  ${wrong.length>0?`<div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--text2);margin:16px 0 10px">FALLASTE</div>${wrong.map(q=>`<div class="review-item"><div style="color:var(--white);font-weight:500">P${q.n}. ${q.q.substring(0,80)}...</div><div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--green);margin-top:4px">→ ${L[q.c]}: ${q.o[q.c]}</div></div>`).join('')}`:'<div style="color:var(--green);font-size:15px;margin:20px 0">🎉 Perfecto</div>'}
+  <div class="nav" style="margin-top:20px"><button class="btn btn-ghost" onclick="S.view='review';render();window.scrollTo(0,0)">📋 Revisar</button><button class="btn btn-ghost" onclick="showTheory(0)">📖 Teoría</button><button class="btn btn-primary" onclick="goHome()">🏠</button></div></div>`;
+}
+function renderReview(el){
+  el.innerHTML=`<div class="hdr" style="padding:16px 22px"><div style="display:flex;justify-content:space-between;align-items:center"><div><div class="tag">REVISIÓN</div></div><button class="btn btn-ghost" onclick="finish()" style="font-size:11px;padding:6px 12px">←</button></div></div>
+  ${S.pool.map((q,i)=>{const a=S.ans[i],ok=a!==undefined&&a===q.c;return`<div class="qcard"><div class="qnum" style="display:flex;justify-content:space-between"><span>P${q.n}</span><span style="color:${ok?'var(--green)':'var(--red)'};font-weight:600">${ok?'✓':'✗'}</span></div><div class="qtxt" style="font-size:13px">${q.q}</div><div style="margin-top:8px;font-size:12px">${!ok?`<div style="color:var(--red)">Tuya: ${L[a]} — ${q.o[a]}</div>`:''}
+  <div style="color:var(--green)">→ ${L[q.c]}: ${q.o[q.c]}</div></div><div style="margin-top:6px;font-size:11px;color:var(--text2);line-height:1.6">${q.x}</div></div>`;}).join('')}
+  <div class="nav" style="margin-top:14px"><button class="btn btn-primary" onclick="goHome()">🏠</button></div>`;
+}
+render();
+</script>
+</body>
+</html>
